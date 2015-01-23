@@ -104,5 +104,15 @@
             </plugin>
         </plugins>
     </build>
+    <dependencies>
+        <dependency>
+            <groupId>Traci4j</groupId>
+            <artifactId>com.traci4j</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/src/main/resources/traci4j.jar</systemPath>
+        </dependency>
+
+    </dependencies>
 
 </project>
