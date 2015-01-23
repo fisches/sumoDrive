@@ -35,13 +35,15 @@ public class FXMLController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         try {
-            stc = new SumoTraciConnection("/Users/florianoliver/projects/sumo/stg/stg.sumo.cfg", 12345);
-            stc.runServer();
-            stc.nextSimStep();
+            stc = new SumoTraciConnection(InetAddress.getLocalHost(), 1234);
+
             Map<String, Lane> lanes = stc.getLaneRepository().getAll();
             lanes.forEach((k, p) -> {
                 System.out.println("p :" + p);
             });
+            for (int i = 0; i < 10000; i++)
+                stc.nextSimStep();
+            
         } catch (UnknownHostException ex) {
             Logger.getLogger(FXMLController.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
