@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,11 +45,11 @@ public class MysqlDriver {
     			+ "     occupancy=?, time=FROM_UNIXTIME(?)");
     	return t -> {
     		try {
-    			stmt.setLong(0, t.osmId);
-    			stmt.setInt(1, t.vehicleCount);
-    			stmt.setInt(2, (int)t.interval);
-				stmt.setInt(3, (int)t.occupancy);
-				stmt.setInt(4, stc.getSimulationData().queryCurrentSimTime().get());
+    			stmt.setLong(1, t.osmId);
+    			stmt.setInt(2, t.vehicleCount);
+    			stmt.setInt(3, (int)t.interval);
+				stmt.setInt(4, (int)t.occupancy);
+				stmt.setInt(5, stc.getSimulationData().queryCurrentSimTime().get());
 				stmt.execute();
 			} catch (Exception e) {
 				if (e instanceof RuntimeException)
@@ -66,19 +67,25 @@ public class MysqlDriver {
     			);
     	Function<Long, Double> retrieveSpeed = edgeId -> {
     		try {
-				stmt.setLong(0, edgeId);
 				stmt.setLong(1, edgeId);
-				return stmt.executeQuery().getDouble(0);
+				stmt.setLong(2, edgeId);
+				ResultSet res = stmt.executeQuery();
+				if (!res.next())
+					return 0d;
+				else
+					return res.getDouble(1);
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
     	};
-    	
+
     	Map<Long, Double> knownSpeeds = new HashMap<>();
     	stc.getLaneRepository().getAll().forEach((laneId, lane) -> {
     		long edgeId = mapper.edgeIdFrom(laneId);
-    		lane.queryChangeMaxSpeed().setValue(
-    				knownSpeeds.computeIfAbsent(edgeId, retrieveSpeed));
+    		double speed = knownSpeeds.computeIfAbsent(edgeId, retrieveSpeed);
+    		if (speed > 0)
+    			lane.queryChangeMaxSpeed()
+    				.setValue(speed);
     	});
     }
 }
