@@ -5,16 +5,18 @@
  */
 package com.drive.sumo;
 
-import com.google.common.collect.ImmutableSet;
 import it.polito.appeal.traci.InductionLoop;
 import it.polito.appeal.traci.StepAdvanceListener;
 import it.polito.appeal.traci.Vehicle;
+
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+
+import com.google.common.collect.ImmutableSet;
 
 /**
  *
@@ -88,6 +90,7 @@ public class MeasurePoint implements StepAdvanceListener {
         }
 
         if (++currentCycleStepCount == cycleLength) {
+        	System.out.println(durationAccum);
             dataConsumer.accept(new Data(
                     durationAccum,
                     occupancyAccum / (cycleLength * loops.size()),

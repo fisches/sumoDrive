@@ -1,21 +1,24 @@
 package com.drive.sumo;
 
-import com.google.common.collect.ImmutableMap;
 import it.polito.appeal.traci.Lane;
 import it.polito.appeal.traci.SumoTraciConnection;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URL;
-import java.net.UnknownHostException;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
+
+import com.google.common.collect.ImmutableMap;
 
 public class FXMLController implements Initializable {
 
@@ -23,7 +26,6 @@ public class FXMLController implements Initializable {
     private Label label;
 
     private SumoTraciConnection stc = null;
-    private Lane laneTmp = null;
 
     @FXML
     private void handleButtonAction(ActionEvent event) {
@@ -77,7 +79,7 @@ public class FXMLController implements Initializable {
                     .put("ind_2074#0", 31L)
                     .put("ind_2074#4", 32L)
                     .build());
-            List<MeasurePoint> measurePoints = laneMapper.buildMeasurePoints(stc.getInductionLoopRepository(), new MysqlDriver(stc), 60);
+            List<MeasurePoint> measurePoints = laneMapper.buildMeasurePoints(stc.getInductionLoopRepository(), new MysqlDriver().dataConsumer(stc), 60);
             measurePoints.forEach(stc::addStepAdvanceListener);
 
             for (int i = 0; i < 1000; i++) {
@@ -87,13 +89,9 @@ public class FXMLController implements Initializable {
                 }
             }
 
-        } catch (UnknownHostException ex) {
+        } catch (IOException|InterruptedException|SQLException ex) {
             Logger.getLogger(FXMLController.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
-            Logger.getLogger(FXMLController.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (InterruptedException ex) {
-            Logger.getLogger(FXMLController.class.getName()).log(Level.SEVERE, null, ex);
-        }
+		}
     }
 
 }
