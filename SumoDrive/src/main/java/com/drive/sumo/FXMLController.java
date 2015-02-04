@@ -1,6 +1,5 @@
 package com.drive.sumo;
 
-import it.polito.appeal.traci.Lane;
 import it.polito.appeal.traci.SumoTraciConnection;
 
 import java.io.IOException;
@@ -8,7 +7,6 @@ import java.net.InetAddress;
 import java.net.URL;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -39,12 +37,6 @@ public class FXMLController implements Initializable {
         try {
             stc = new SumoTraciConnection(InetAddress.getLocalHost(), 1234);
 
-            Map<String, Lane> lanes = stc.getLaneRepository().getAll();
-            lanes.forEach((k, p) -> {
-                System.out.println("p :" + p);
-            });
-            stc.nextSimStep();
-            stc.nextSimStep();
             LaneMapper laneMapper = new LaneMapper(ImmutableMap.<String, Long>builder()
                     .put("1714", 1L)
                     .put("1632", 2L)
@@ -77,7 +69,7 @@ public class FXMLController implements Initializable {
                     .put("236#1", 29L)
                     .put("238#0", 30L)
                     .put("238#1", 31L)
-                    .put("238#0", 32L)
+                    .put("238#2", 32L)
                     .put("256", 33L)
                     .put("258", 34L)
                     .put("260", 35L)
@@ -151,17 +143,19 @@ public class FXMLController implements Initializable {
                     .put("2095", 103L)
                     .put("2097", 104L)
                     .build());
-            List<MeasurePoint> measurePoints = laneMapper.buildMeasurePoints(stc.getInductionLoopRepository(), new MysqlDriver().dataConsumer(stc), 60);
-            measurePoints.forEach(stc::addStepAdvanceListener);
+            MysqlDriver driver = new MysqlDriver();
+            List<MeasurePoint> measurePoints = laneMapper.buildMeasurePoints(stc.getInductionLoopRepository(), driver.dataConsumer(stc), 60);
 
-            for (int i = 0; i < 1000; i++) {
-                stc.nextSimStep();
+            for (int i = 0; i < 10000; i++) {
+                stc.nextSimStep(.1);
                 for (MeasurePoint m : measurePoints) {
-                    m.step();
+                    m.step(stc);
                 }
+                driver.loadSpeeds(laneMapper, stc);
             }
 
         } catch (IOException|InterruptedException|SQLException ex) {
+        	ex.printStackTrace();
             Logger.getLogger(FXMLController.class.getName()).log(Level.SEVERE, null, ex);
 		}
     }

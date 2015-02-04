@@ -17,8 +17,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -30,12 +28,16 @@ public class MysqlDriver {
     public MysqlDriver() {
         try {
         	Class.forName("com.mysql.jdbc.Driver");
-            this.connection = DriverManager.getConnection("jdbc:mysql://localhost/demo", "root", "root");
-        } catch (ClassNotFoundException ex) {
-            Logger.getLogger(MysqlDriver.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (SQLException ex) {
-            Logger.getLogger(MysqlDriver.class.getName()).log(Level.SEVERE, null, ex);
+            connection = DriverManager.getConnection("jdbc:mysql://localhost/algo_demo2", "root", "gangstaniggashit");
+            resetData();
+        } catch (ClassNotFoundException|SQLException ex) {
+        	throw new RuntimeException(ex);
         }
+    }
+
+    private void resetData() throws SQLException {
+    	connection.createStatement().execute("TRUNCATE TABLE edge_state");
+    	connection.createStatement().execute("TRUNCATE TABLE edge_speed");
     }
 
     public Consumer<MeasurePoint.Data> dataConsumer(SumoTraciConnection stc) throws SQLException {
@@ -45,7 +47,7 @@ public class MysqlDriver {
     			+ "     occupancy=?, time=FROM_UNIXTIME(?)");
     	return t -> {
     		try {
-    			stmt.setLong(1, t.osmId);
+    			stmt.setLong(1, t.algoEdgeId);
     			stmt.setInt(2, t.vehicleCount);
     			stmt.setInt(3, (int)t.interval);
 				stmt.setInt(4, (int)t.occupancy);
