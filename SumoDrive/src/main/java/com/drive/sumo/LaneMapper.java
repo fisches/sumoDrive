@@ -36,8 +36,7 @@ public class LaneMapper {
 
     public List<MeasurePoint>
             buildMeasurePoints(Repository<InductionLoop> repo,
-                               Consumer<MeasurePoint.Data> dataConsumer,
-                               int cycleLength)
+                               Consumer<MeasurePoint.Data> dataConsumer)
             throws IOException {
 
     	Map<String, List<InductionLoop>> groups = repo.getAll().values().stream()
@@ -50,7 +49,6 @@ public class LaneMapper {
     			.map(e -> new MeasurePoint(
 	    				dataConsumer,
 	    				ImmutableSet.copyOf(e.getValue()),
-	    				cycleLength,
 	    				sumoToAlgoEdgeIdMap.get(e.getKey()))
 	    		).collect(toList());
     }

@@ -17,6 +17,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.io.ByteStreams;
 
 public class FXMLController implements Initializable {
 
@@ -144,20 +145,46 @@ public class FXMLController implements Initializable {
                     .put("2097", 104L)
                     .build());
             MysqlDriver driver = new MysqlDriver();
-            List<MeasurePoint> measurePoints = laneMapper.buildMeasurePoints(stc.getInductionLoopRepository(), driver.dataConsumer(stc), 60);
+            List<MeasurePoint> measurePoints = laneMapper.buildMeasurePoints(stc.getInductionLoopRepository(), driver.dataConsumer(stc));
 
-            for (int i = 0; i < 10000; i++) {
+            int cycleStart = currentTimeMs();
+            while (currentTimeMs() < 1_000_000) {
                 stc.nextSimStep(.1);
                 for (MeasurePoint m : measurePoints) {
-                    m.step(stc);
+                    m.step();
                 }
-                driver.loadSpeeds(laneMapper, stc);
+                if (currentTimeMs() - cycleStart >= 60_000) {
+                	for (MeasurePoint m : measurePoints)
+                		m.endCycle((currentTimeMs() - cycleStart) / 1_000);
+                	invokeAlgo();
+                	driver.loadSpeeds(laneMapper, stc);
+                	cycleStart = currentTimeMs();
+                }
             }
 
         } catch (IOException|InterruptedException|SQLException ex) {
         	ex.printStackTrace();
             Logger.getLogger(FXMLController.class.getName()).log(Level.SEVERE, null, ex);
 		}
+    }
+
+    private void invokeAlgo() throws IOException, InterruptedException {
+    	Process p =
+	    	Runtime.getRuntime().exec(new String[] {
+	    			"/home/didier_m/eipw/server_core/build/algo_v2", "mysql://dbname=algo_demo2 user=root password=gangstaniggashit", "true", "--timestamp", convertTime(currentTimeMs()) + ""
+	    			});
+    	ByteStreams.copy(p.getInputStream(), System.out);
+    	ByteStreams.copy(p.getErrorStream(), System.err);
+    	if (p.waitFor() != 0)
+    		throw new RuntimeException("ALGO FAILED");
+    }
+
+    private int currentTimeMs() throws IOException {
+    	return stc.getSimulationData().queryCurrentSimTime().get();
+    }
+
+    public static int convertTime(int ms) {
+    	return ms / 1000 + 10_000_000;
     }
 
 }

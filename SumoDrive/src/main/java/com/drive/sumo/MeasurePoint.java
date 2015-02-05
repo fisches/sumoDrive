@@ -6,7 +6,6 @@
 package com.drive.sumo;
 
 import it.polito.appeal.traci.InductionLoop;
-import it.polito.appeal.traci.SumoTraciConnection;
 import it.polito.appeal.traci.Vehicle;
 
 import java.io.IOException;
@@ -24,22 +23,20 @@ public class MeasurePoint {
 
     private final Consumer<Data> dataConsumer;
     private final ImmutableSet<InductionLoop> loops;
-    private final int cycleLength;
     private final long algoEdgeId;
     private final Set<Vehicle> vehiclesSeenLast = new HashSet<>();
     private int currentCycleStepCount;
     private double occupancyAccum;
     private int vehicleCountAccum;
-    private double cycleStartTime;
-    private double currentTime;
 
     public static class Data {
 
-        public final double interval, occupancy;
+        public final int interval;
+        public final double occupancy;
         public final int vehicleCount;
         public final long algoEdgeId;
 
-        public Data(double interval,
+        public Data(int interval,
                     double occupancy,
                     int vehicleCount,
                     long algoEdgeId) {
@@ -52,17 +49,14 @@ public class MeasurePoint {
 
     public MeasurePoint(Consumer<Data> dataConsumer,
                         ImmutableSet<InductionLoop> loops,
-                        int cycleLength,
                         long algoEdgeId) {
         this.dataConsumer = dataConsumer;
         this.loops = loops;
-        this.cycleLength = cycleLength;
         this.algoEdgeId = algoEdgeId;
         resetCycle();
     }
 
-    public void step(SumoTraciConnection stc) throws IOException {
-    	currentTime = stc.getSimulationData().queryCurrentSimTime().get() / 1000;
+    public void step() throws IOException {
         for (InductionLoop loop : loops) {
             if (loop.getOccupancy() > 0) {
                 occupancyAccum += loop.getOccupancy();
@@ -80,23 +74,22 @@ public class MeasurePoint {
             vehiclesSeenLast.addAll(loop.getLastStepVehicles());
         }
         ++currentCycleStepCount;
+    }
 
-        if (currentTime - cycleStartTime >= cycleLength) {
-            dataConsumer.accept(new Data(
-                    currentTime - cycleStartTime,
-                    occupancyAccum / (currentCycleStepCount * loops.size()),
-                    vehicleCountAccum,
-                    algoEdgeId
-            ));
-            resetCycle();
-        }
+    public void endCycle(int duration) {
+    	dataConsumer.accept(new Data(
+    			duration,
+    			occupancyAccum / (currentCycleStepCount * loops.size()),
+    			vehicleCountAccum,
+    			algoEdgeId
+		));
+    	resetCycle();
     }
 
     private void resetCycle() {
         currentCycleStepCount = 0;
         occupancyAccum = 0;
         vehicleCountAccum = 0;
-        cycleStartTime = currentTime;
     }
 
 }

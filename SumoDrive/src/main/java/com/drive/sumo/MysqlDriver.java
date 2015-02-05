@@ -49,9 +49,9 @@ public class MysqlDriver {
     		try {
     			stmt.setLong(1, t.algoEdgeId);
     			stmt.setInt(2, t.vehicleCount);
-    			stmt.setInt(3, (int)t.interval);
+    			stmt.setInt(3, t.interval);
 				stmt.setInt(4, (int)t.occupancy);
-				stmt.setInt(5, stc.getSimulationData().queryCurrentSimTime().get());
+				stmt.setInt(5, FXMLController.convertTime(stc.getSimulationData().queryCurrentSimTime().get()) - 59);
 				stmt.execute();
 			} catch (Exception e) {
 				if (e instanceof RuntimeException)
@@ -85,9 +85,18 @@ public class MysqlDriver {
     	stc.getLaneRepository().getAll().forEach((laneId, lane) -> {
     		long edgeId = mapper.edgeIdFrom(laneId);
     		double speed = knownSpeeds.computeIfAbsent(edgeId, retrieveSpeed);
-    		if (speed > 0)
+    		if (speed > 0) {
+    			if (speed != 70 && speed != 90 && speed != 110 && speed != 130)
+    				System.out.println("Speed : " + laneId + " = " + speed);
     			lane.queryChangeMaxSpeed()
-    				.setValue(speed);
+    				.setValue(speed / 3.6);
+    			try {
+					lane.queryChangeMaxSpeed()
+						.run();
+				} catch (Exception e) {
+					throw new RuntimeException(e);
+				}
+    		}
     	});
     }
 }
