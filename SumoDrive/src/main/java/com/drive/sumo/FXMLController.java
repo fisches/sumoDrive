@@ -1,7 +1,8 @@
 package com.drive.sumo;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.io.ByteStreams;
 import it.polito.appeal.traci.SumoTraciConnection;
-
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URL;
@@ -10,14 +11,10 @@ import java.util.List;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
-
-import com.google.common.collect.ImmutableMap;
-import com.google.common.io.ByteStreams;
 
 public class FXMLController implements Initializable {
 
@@ -39,14 +36,14 @@ public class FXMLController implements Initializable {
             stc = new SumoTraciConnection(InetAddress.getLocalHost(), 1234);
 
             LaneMapper laneMapper = new LaneMapper(ImmutableMap.<String, Long>builder()
-                    .put("1714", 1L)
-                    .put("1632", 2L)
-                    .put("1630", 3L)
-                    .put("1608", 4L)
-                    .put("996", 5L)
-                    .put("612", 6L)
-                    .put("608", 7L)
-                    .put("532", 8L)
+                    .put("1693", 1L)
+                    .put("1681", 2L)
+                    .put("20001", 3L)
+                    .put("1626", 4L)
+                    .put("20000", 5L)
+                    .put("1249", 6L)
+                    .put("1245", 7L)
+                    .put("1236", 8L)
                     .put("220#0", 9L)
                     .put("220#1", 10L)
                     .put("220#2", 11L)
@@ -154,37 +151,39 @@ public class FXMLController implements Initializable {
                     m.step();
                 }
                 if (currentTimeMs() - cycleStart >= 60_000) {
-                	for (MeasurePoint m : measurePoints)
-                		m.endCycle((currentTimeMs() - cycleStart) / 1_000);
-                	invokeAlgo();
-                	driver.loadSpeeds(laneMapper, stc);
-                	cycleStart = currentTimeMs();
+                    for (MeasurePoint m : measurePoints) {
+                        m.endCycle((currentTimeMs() - cycleStart) / 1_000);
+                    }
+                    invokeAlgo();
+                    driver.loadSpeeds(laneMapper, stc);
+                    cycleStart = currentTimeMs();
                 }
             }
 
-        } catch (IOException|InterruptedException|SQLException ex) {
-        	ex.printStackTrace();
+        } catch (IOException | InterruptedException | SQLException ex) {
+            ex.printStackTrace();
             Logger.getLogger(FXMLController.class.getName()).log(Level.SEVERE, null, ex);
-		}
+        }
     }
 
     private void invokeAlgo() throws IOException, InterruptedException {
-    	Process p =
-	    	Runtime.getRuntime().exec(new String[] {
-	    			"/home/didier_m/eipw/server_core/build/algo_v2", "mysql://dbname=algo_demo2 user=root password=gangstaniggashit", "true", "--timestamp", convertTime(currentTimeMs()) + ""
-	    			});
-    	ByteStreams.copy(p.getInputStream(), System.out);
-    	ByteStreams.copy(p.getErrorStream(), System.err);
-    	if (p.waitFor() != 0)
-    		throw new RuntimeException("ALGO FAILED");
+        Process p
+                = Runtime.getRuntime().exec(new String[]{
+                    "/home/didier_m/eipw/server_core/build/algo_v2", "mysql://dbname=algo_demo2 user=root password=gangstaniggashit", "true", "--timestamp", convertTime(currentTimeMs()) + ""
+                });
+        ByteStreams.copy(p.getInputStream(), System.out);
+        ByteStreams.copy(p.getErrorStream(), System.err);
+        if (p.waitFor() != 0) {
+            throw new RuntimeException("ALGO FAILED");
+        }
     }
 
     private int currentTimeMs() throws IOException {
-    	return stc.getSimulationData().queryCurrentSimTime().get();
+        return stc.getSimulationData().queryCurrentSimTime().get();
     }
 
     public static int convertTime(int ms) {
-    	return ms / 1000 + 10_000_000;
+        return ms / 1000 + 10_000_000;
     }
 
 }
