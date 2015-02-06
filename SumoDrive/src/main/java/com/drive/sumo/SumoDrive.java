@@ -1,7 +1,8 @@
 package com.drive.sumo;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.io.ByteStreams;
 import it.polito.appeal.traci.SumoTraciConnection;
-
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URL;
@@ -11,29 +12,14 @@ import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javafx.event.ActionEvent;
-import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
-import javafx.scene.control.Label;
+public class SumoDrive {
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.io.ByteStreams;
-
-public class FXMLController implements Initializable {
-
-    @FXML
-    private Label label;
+    public SumoDrive() {
+        initialize(null, null);
+    }
 
     private SumoTraciConnection stc = null;
 
-    @FXML
-    private void handleButtonAction(ActionEvent event) {
-        System.out.println("You clicked me!");
-        label.setText("Hello World!");
-
-    }
-
-    @Override
     public void initialize(URL url, ResourceBundle rb) {
         try {
             stc = new SumoTraciConnection(InetAddress.getLocalHost(), 1234);
@@ -165,7 +151,7 @@ public class FXMLController implements Initializable {
 
         } catch (IOException | InterruptedException | SQLException ex) {
             ex.printStackTrace();
-            Logger.getLogger(FXMLController.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(SumoDrive.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 

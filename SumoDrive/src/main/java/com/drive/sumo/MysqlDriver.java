@@ -51,7 +51,7 @@ public class MysqlDriver {
     			stmt.setInt(2, t.vehicleCount);
     			stmt.setInt(3, t.interval);
 				stmt.setInt(4, (int)t.occupancy);
-				stmt.setInt(5, FXMLController.convertTime(stc.getSimulationData().queryCurrentSimTime().get()) - 59);
+				stmt.setInt(5, SumoDrive.convertTime(stc.getSimulationData().queryCurrentSimTime().get()) - 59);
 				stmt.execute();
 			} catch (Exception e) {
 				if (e instanceof RuntimeException)
