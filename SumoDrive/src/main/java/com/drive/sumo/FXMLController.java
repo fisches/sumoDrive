@@ -1,8 +1,7 @@
 package com.drive.sumo;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.io.ByteStreams;
 import it.polito.appeal.traci.SumoTraciConnection;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URL;
@@ -11,10 +10,14 @@ import java.util.List;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.common.io.ByteStreams;
 
 public class FXMLController implements Initializable {
 
@@ -145,7 +148,7 @@ public class FXMLController implements Initializable {
             List<MeasurePoint> measurePoints = laneMapper.buildMeasurePoints(stc.getInductionLoopRepository(), driver.dataConsumer(stc));
 
             int cycleStart = currentTimeMs();
-            while (currentTimeMs() < 1_000_000) {
+            while (currentTimeMs() < 1_000_000_000) {
                 stc.nextSimStep(.1);
                 for (MeasurePoint m : measurePoints) {
                     m.step();
@@ -174,7 +177,7 @@ public class FXMLController implements Initializable {
         ByteStreams.copy(p.getInputStream(), System.out);
         ByteStreams.copy(p.getErrorStream(), System.err);
         if (p.waitFor() != 0) {
-            throw new RuntimeException("ALGO FAILED");
+            throw new RuntimeException("ALGO FAILED at t=" + convertTime(currentTimeMs()));
         }
     }
 
